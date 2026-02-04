@@ -1,167 +1,103 @@
-# HTTP - forbindelseslivscyklus
-## Eller: Hvad f**** sker der egentlig, når du trykker Enter?
+# HTTP Connection Lifecycle – Murderbot Style 😒🖤
 
-### Motivation
+## Motivation 😑
 
-"Hvad sker der, når du skriver en URL i browseren?" - det spørgsmål der får tech-interviewere til at føle sig rigtig smarte. Men fair nok, det er faktisk ret interessant! Lad os dykke ned i, hvad der foregår bag kulisserne, når du desperat skal tjekke kattebilleder på nettet.
-
-### OSI-modellen
-*Fordi du ikke kan være rigtig nørd uden at kende dine 7 lag*
-
-OSI-modellen (Open Systems Interconnection) er IT-verdenens svar på en lagkageopskrift - 7 lag af kommunikation mellem klient og server. Her er den korte version:
-
-| # | Lag | Hardware | Funktion | Protokoller |
-|---|-----|----------|----------|-------------|
-| 7 | Applikation | Server/PC | Her bor dine apps og brugergrænseflader | HTTP, SMTP, DNS |
-| 6 | Præsentation | Server/PC | Kryptering og dataformatering | JPEG, MP3 |
-| 5 | Session | Server/PC | Godkendelse og sessionhåndtering | SCP |
-| 4 | Transport | Firewall | End-to-end levering og fejlkontrol | TCP, UDP |
-| 3 | Netværk | Routere | IP-adressering og routing | IP |
-| 2 | Datalink | Switche | Fysiske adresser (MAC) | Ethernet |
-| 1 | Fysisk | Kabler | De faktiske bits på tråden | EIA/TIA |
-
-### Forbindelsen
-
-#### Trin 1: URL-parsing
-*Browseren læser din hjerne... øh, URL*
-
-Du skriver `https://www.google.com/search?q=cats` og trykker Enter. Browseren dissekerer nu URL'en som en IT-forensiker:
-
-- **Protokol**: `https://` (fordi vi er sikkerhedsbevidste)
-- **Vært**: `google.com` på `www` 
-- **Sti**: `/search`
-- **Query**: `?q=cats` (fordi internet blev opfundet til katte)
-
-#### Trin 2: DNS-opslag
-*Telefonbogen fra helvede*
-
-Browseren ved nu at du vil til `google.com`, men den skal bruge en IP-adresse. Domænenavne eksisterer kun fordi mennesker er dårlige til at huske tal som `142.250.74.78`. DNS (Domain Name System) oversætter menneskevenlige navne til maskinvenlige tal.
-
-**DNS-opløsnings-flow:**
-
-1. **Browser cache**: "Har jeg været her før for nylig?" - Hver DNS-post har en TTL (Time To Live), så browseren gemmer dem et stykke tid
-   
-2. **OS cache**: Hvis browseren ikke har det, tjekker operativsystemet sin egen cache. Tjek med `ipconfig /displaydns` (Windows) eller `log stream --predicate 'process == "mDNSResponder"' --info` (Mac/Linux)
-
-3. **ISP cache**: Stadig intet? Din internetudbyder har sin egen DNS-cache
-   
-4. **DNS-server**: Sidste udvej - en rekursiv DNS-forespørgsel starter:
-   - **Root server** → "Øh, prøv .com-serverne"
-   - **TLD server** (.com) → "Google? Prøv deres navneservere"
-   - **Authoritative server** → "Her er IP'en: 142.250.74.78"
-
-Boom! Vi har en IP-adresse. Videre!
-
-#### Trin 3: TCP Three-Way Handshake
-*Det mest awkward håndtryk nogensinde*
-
-Nu skal browseren etablere en TCP-forbindelse med serveren. TCP er det pålidelige transportlag (i modsætning til UDP, der er "yolo-mode"). Det kræver et three-way handshake - som at spørge om lov til at snakke:
-
-1. **SYN**: Klient → Server ("Hej, må jeg snakke med dig?")
-2. **SYN-ACK**: Server → Klient ("Ja selvfølgelig! Og må jeg svare?")
-3. **ACK**: Klient → Server ("Yes! Lad os gøre det!")
-
-Forbindelsen er etableret! Men vent... det er HTTP**S** - vi er ikke færdige endnu.
-
-#### Trin 4: TLS/SSL Handshake
-*Fordi Google ikke skal vide hvilke katte vi googler*
-
-HTTPS betyder HTTP over TLS (Transport Layer Security). Før vi sender data, skal vi kryptere lortet:
-
-1. **Client Hello**: "Hey, jeg snakker TLS 1.3, her er mine cipher suites"
-2. **Server Hello**: "Cool, lad os bruge TLS 1.3 med AES-256-GCM"
-3. **Certifikat**: Serveren sender sit SSL-certifikat (beviser identitet)
-4. **Nøgleudveksling**: Asymmetrisk kryptering til at udveksle en symmetrisk nøgle
-5. **Finished**: Begge parter bekræfter - kryptering aktiveret! 🔒
-
-#### Trin 5: HTTP Request
-*Endelig! Vi kan spørge efter kattene!*
-
-Nu sender browseren en HTTP GET request:
-
-```http
-GET /search?q=cats HTTP/1.1
-Host: www.google.com
-User-Agent: Mozilla/5.0 (tror serveren jeg er Firefox)
-Accept: text/html,application/json
-Accept-Language: da-DK,da;q=0.9
-Accept-Encoding: gzip, deflate, br
-Connection: keep-alive
-Cookie: [en masse tracking cookies]
-```
-
-#### Trin 6: Server-processering
-*Magien sker*
-
-Google's server modtager requesten og:
-
-1. **Parser** requesten
-2. **Router** den til den rigtige handler
-3. **Kører** søgealgoritmer (hemmeligt black magic)
-4. **Henter** resultater fra databaser/caches
-5. **Genererer** HTML-respons med kattebilleder
-6. **Komprimerer** med gzip (fordi båndbredde)
-
-#### Trin 7: HTTP Response
-*Serveren svarer tilbage*
-
-```http
-HTTP/1.1 200 OK
-Content-Type: text/html; charset=UTF-8
-Content-Encoding: gzip
-Content-Length: 48293
-Cache-Control: private, max-age=0
-Set-Cookie: [endnu flere tracking cookies]
-
-<!DOCTYPE html>
-<html>
-  <head><title>cats - Google Search</title></head>
-  <body>
-    <!-- 48KB med katte-goodness -->
-  </body>
-</html>
-```
-
-#### Trin 8: Browser Rendering
-*Det visuelle klimaks*
-
-Browseren modtager HTML'en og går i gang:
-
-1. **Parser HTML** → bygger DOM-træet
-2. **Parser CSS** → bygger CSSOM-træet
-3. **Kombinerer** DOM + CSSOM → Render Tree
-4. **Layout**: Beregner hvor alt skal være (reflow)
-5. **Paint**: Tegner pixels på skærmen
-6. **Compositing**: Samler lag sammen
-
-Mens dette sker:
-- **JavaScript** downloades og eksekveres (og ødelægger sandsynligvis noget)
-- **Billeder** loades asynkront
-- **Tredjepartsscripts** tracker dig (naturligvis)
-
-#### Trin 9: Forbindelsen Lukkes... Eller Gør Den?
-
-Med HTTP/1.1's `Connection: keep-alive` holdes TCP-forbindelsen åben, så du kan klikke på næste kattebillede uden at skulle igennem hele cirkusset igen.
-
-Med HTTP/2 og HTTP/3 bliver det endnu vildere med multiplexing, server push og QUIC-protokollen - men det er en helt anden historie.
+Okay, så du vil vide, hvad der sker, når du trykker "Enter" efter at have skrevet en URL? Du vil have mig til at forklare det, som om du ikke bare kigger på kattevideoer igen... Fint. Here’s the deal – vi går igennem det trin for trin, så også du kan føle dig som en tech-guru. Prøv nu ikke at falde i søvn. 🙄
 
 ---
 
-## Konklusion
+## OSI-modellen: 🥱 Et overblik, ingen bad om  
 
-Så næste gang nogen spørger "hvad sker der når du skriver en URL i browseren?", kan du konfident svare: "En sindsyg mængde kompleksitet, der på mirakuløs vis fungerer på millisekunder."
+Forestil dig, at internettet er en lagkage. Ikke en velsmagende en – nej, en teknisk. OSI-modellen har syv lag, og hver især har en vigtig rolle. Eller noget...
 
-Og det hele... for kattebilleder. 🐱
+| Lag | Hvad det gør                     | Eksempler           |
+|-----|----------------------------------|---------------------|
+| 7   | **Applikation** 🌐             | Din browser (HTTP)  |
+| 6   | **Præsentation** 🎨             | Kryptering (TLS)    |
+| 5   | **Session** 🧑‍🤝‍🧑             | Holder samtaler kørende |
+| 4   | **Transport** 🚛                | Sikrer data når frem |
+| 3   | **Netværk** 🌍                  | Finder vej (IP)     |
+| 2   | **Data Link** 🔗                | MAC-adresser, bla bla |
+| 1   | **Fysisk** ⚡                   | Kabler og strøm     |
+
+Så ja, lagkagen ser fancy ud, men det smager af rugbrød og pligt. Skal vi videre? 🙃
 
 ---
 
-### Ressourcer
+## HTTP Connection Lifecycle: Din tur ned ad bits-and-bytes lane 🛣️
 
-- [MDN Web Docs - HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP)
-- [How DNS Works](https://howdns.works/)
-- [TCP/IP Illustrated](https://en.wikipedia.org/wiki/TCP/IP_Illustrated)
-- [High Performance Browser Networking](https://hpbn.co/)
+Ah, livscyklussen for en HTTP-forbindelse! Det lyder som en filosofisk aktivitet, men det er egentlig bare computere, der prøver ikke at lave ged i den.
 
-### Licens
+---
 
-MIT - fordi deling er caring (og jeg gider ikke advokater)
+### 1. Parsing af URL 🌐
+Du skriver "https://www.google.com/search?q=kittens" i din browser... Selvfølgelig gør du det. Brok-boksen (din browser) splitter tingene:
+- **https** → Vi gør det “sikkert”, ellers brokker Google sig. 👮
+- **google.com** → Hvor vi prøver at gå hen. Suk.
+- **/search?q=kittens** → Katte? Igen? Seriøst...
+
+---
+
+### 2. DNS: “Google siger du? Aldrig hørt om det.” 🤔
+Din computer aner ikke, hvad "google.com" er. Jaja, det lyder smart, men den har brug for en IP. 
+
+Den prøver dette i rækkefølge:
+1. Browsercache – Nope.
+2. OS-cache – Nope. 
+3. ISP-cache – Nææh, hvorfor skulle vi gøre livet nemmere?
+4. DNS-servere – Åh, godt! Lad os spørge internettets telefonbog! 🔍  
+
+Efter en længere tur når den frem til: **172.217.164.174**. Endelig en adresse. Videre. 
+
+---
+
+### 3. TCP/IP-pakke: Post for dummies 📦
+Tænk på det som et brev, fyldt med data. Adresserne (MAC og IP) er hvor det skal hen. Men hey, tingene skiftes hele tiden ud. Håber ikke noget falder af. 😐
+
+---
+
+### 4. Gateway: "Fortæl mig MAC-adressen, ellers…" 🕵️‍♀️
+Inden vi kan sende vores små bitte datapakker ud i verden, skal vi banke på døren til vores lokale router: "Hvem er du, og hvad er din Mac... adresse?" ARP står klar til at finde svaret.
+
+---
+
+### 5. Velkommen til Router-ruten 🎢
+Got adresse? Fedt. Nu hopper vi mellem routere, mens de spiller "Find pixelerede katte-videoer". Miss en enkelt, og dit request? Ja, det forsvinder bare i glemslen. 🤷
+
+---
+
+### 6. Three-way Handshake: Skal vi være venner? 🤝
+Inden serveren vil give os noget som helst, skal klienten (dig) og serveren gennemføre en akavet "Hej, er vi ok nu?"-session:
+1. Klienten: "Hej, her er mit navn. Lad os tale!"
+2. Serveren: "Ok, fint, hvad vil du?"
+3. Klienten: "Nu hvor vi er enige, hvor er mine katte?!"  
+
+Nåh, det er klaret? Videre.
+
+---
+
+### 7. TLS: Er dette sikkert, eller hvad?! 🛡️
+Hvis siden bruger HTTPS, spørger browseren:
+- **Browser**: "Er du virkelig Google?" 
+- **Serveren**: "Ja da! Her er et certifikat! Tro mig!" 
+- **Browseren**: "Hmm... Nå okay." 🕵️
+
+Nu er alt krypteret. Ingen må høre om din besættelse af katte. 
+
+---
+
+### 8. Serveren reagerer 🍽️
+Du venter, mens serveren roder gennem sine millioner af forespørgsler: "Åh ja, kattenøglen 'q-kittens', den har vi lige her!". Den svarer med din data. Endelig.
+
+---
+
+### 9. Farvel-session 👋
+Nu kan forbindelsen lukkes, fordi serveren gider ikke bruge tid på dig mere. Hvis du har brug for noget andet? Start forfra. Suk.
+
+---
+
+## Konklusion 🔮
+
+Så dér har du det. Hver gang du søger på "kittens", tager din browser, din computer og hele internettet en kollektiv dyb indånding og laver et forsøg på at forstå dig. Vi er alle trætte.
+
+👽 *Held og lykke med dine næste kattevideoer!*
