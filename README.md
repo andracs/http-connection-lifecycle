@@ -1,5 +1,7 @@
 # HTTP Connection Lifecycle – Murderbot Style 😒🖤
 
+Baseret på denne fremragende stykke af teknisk dokumentation [hardikvasa/http-connection-lifecycle]([url](https://github.com/hardikvasa/http-connection-lifecycle)) ❤️
+
 ## Motivation 😑
 
 Okay, så du vil vide, hvad der sker, når du trykker "Enter" efter at have skrevet en URL? Du vil have mig til at forklare det, som om du ikke bare kigger på kattevideoer igen... Fint. Here’s the deal – vi går igennem det trin for trin, så også du kan føle dig som en tech-guru. Prøv nu ikke at falde i søvn. 🙄
