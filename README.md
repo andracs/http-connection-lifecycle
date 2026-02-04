@@ -1,6 +1,6 @@
 # HTTP Connection Lifecycle – Murderbot Style 😒🖤
 
-Baseret på denne fremragende stykke af teknisk dokumentation: [hardikvasa/http-connection-lifecycle]([url](https://github.com/hardikvasa/http-connection-lifecycle)) ❤️
+Baseret på denne fremragende stykke af teknisk dokumentation: [hardikvasa/http-connection-lifecycle](https://github.com/hardikvasa/http-connection-lifecycle) ❤️
 
 ## Motivation 😑
 
