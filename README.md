@@ -1,5 +1,5 @@
-# HTTP-forbindelseslivscyklus
-## Eller: Hvad fanden sker der egentlig, når du trykker Enter?
+# HTTP - forbindelseslivscyklus
+## Eller: Hvad f**** sker der egentlig, når du trykker Enter?
 
 ### Motivation
 
